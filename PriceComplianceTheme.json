@@ -1,0 +1,10 @@
+{
+  "name": "Price Compliance",
+  "dataColors": ["#12705a", "#a3e0cc", "#d9d5ce", "#f0a07b", "#b94a20", "#6b7280", "#2563eb", "#9ca3af"],
+  "background": "#FFFFFF",
+  "foreground": "#111827",
+  "tableAccent": "#12705a",
+  "good": "#12705a",
+  "bad": "#b94a20",
+  "neutral": "#d9d5ce"
+}
