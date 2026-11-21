@@ -69,22 +69,23 @@ part number and placed in one of five categories: **▼▼ below >30 %,
 
 ![Price categories](data/output/charts/price_categories.png)
 
-**Company summary (2025–2026)** – by company type, with subtotals:
+**Company summary (2026)** – by company type, with subtotals:
 
 | Type | Company | Spend | Spend with offer | Bought at offered price* | Overpay | Overpay % of quoted spend |
 |---|---|---|---|---|---|---|
-| Airlines | Airline A | $5.88M | 37 % | 33 % | $188K | 8.7 % |
-| Airlines | Airline B | $4.49M | 43 % | 28 % | $203K | 10.5 % |
-| Airlines | Airline C | $2.39M | 41 % | 40 % | $76K | 7.8 % |
-| MRO | MRO One | $9.62M | 42 % | 33 % | $382K | 9.5 % |
-| MRO | MRO Two | $6.56M | 43 % | 30 % | $265K | 9.4 % |
-| MRO | MRO Three | $3.03M | 39 % | 28 % | $116K | 9.8 % |
-| **All** | | **$31.96M** | **41 %** | **31 %** | **$1.23M** | **9.4 %** |
+| Airlines | Airline A | $2.69M | 36 % | 33 % | $86K | 8.8 % |
+| Airlines | Airline B | $1.99M | 43 % | 30 % | $84K | 9.8 % |
+| Airlines | Airline C | $1.06M | 44 % | 41 % | $35K | 7.6 % |
+| MRO | MRO One | $4.46M | 43 % | 36 % | $161K | 8.4 % |
+| MRO | MRO Two | $3.13M | 42 % | 33 % | $120K | 9.2 % |
+| MRO | MRO Three | $1.37M | 38 % | 26 % | $55K | 10.5 % |
+| **All** | | **$14.69M** | **41 %** | **33 %** | **$540K** | **9.0 %** |
 
 \* share of quoted spend
 
 The share of offered lines bought at the offered price rose from **29 % in 2025
-to 36 % in 2026**.
+to 36 % in 2026**. Category, company and vendor charts show 2026 – the same
+period as both dashboards – while the trend chart covers all months.
 
 ![Overpay by company](data/output/charts/overpay_by_company.png)
 ![Monthly trend](data/output/charts/monthly_trend.png)

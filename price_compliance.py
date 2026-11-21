@@ -131,69 +131,91 @@ def monthly_kpis(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 usd = FuncFormatter(lambda x, _: f"${x/1000:,.0f}K")
+plt.rcParams["text.parse_math"] = False
+INK, MUTED, GRID = "#111827", "#6b7280", "#e5e7eb"
+GREEN, RED, GREY = "#12705a", "#b94a20", "#6b7280"
 
 
-def chart_categories(df: pd.DataFrame, path) -> None:
+def style(ax, title: str) -> None:
+    """Shared clean look: no top/right spines, light grid, left-aligned title."""
+    ax.set_title(title, loc="left", fontsize=12, weight="bold", color=INK, pad=12)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.spines[["left", "bottom"]].set_color(GRID)
+    ax.tick_params(colors=MUTED, labelsize=9)
+    ax.grid(axis="y", color=GRID, lw=0.8)
+    ax.set_axisbelow(True)
+
+
+def chart_categories(df: pd.DataFrame, path, year: int) -> None:
     counts = df["Price Category"].value_counts().reindex(CATEGORIES, fill_value=0)
     share = counts / counts.sum()
     fig, ax = plt.subplots(figsize=(10, 1.9))
     left = 0
-    for cat, s, n, colour in zip(CATEGORIES, share, counts, CATEGORY_COLORS):
+    text_colours = ["white", INK, INK, INK, "white"]
+    for cat, s, n, colour, tc in zip(CATEGORIES, share, counts, CATEGORY_COLORS, text_colours):
         ax.barh(0, s, left=left, color=colour)
         if s > 0.04:
-            ax.text(left + s / 2, 0, f"{s:.0%}\n{n} lines", ha="center", va="center", fontsize=9)
+            ax.text(left + s / 2, 0, f"{s:.0%}\n{n:,} lines", ha="center", va="center", fontsize=9, color=tc)
         left += s
     ax.set_xlim(0, 1)
     ax.axis("off")
     ax.legend([plt.Rectangle((0, 0), 1, 1, color=c) for c in CATEGORY_COLORS], CATEGORIES,
               ncol=5, loc="upper center", bbox_to_anchor=(0.5, -0.05), frameon=False, fontsize=9)
-    ax.set_title("PO lines by price category (vs. best offered price)", loc="left", fontsize=11)
+    ax.set_title(f"PO lines by price category vs. best offered price · {year}", loc="left", fontsize=12,
+                 weight="bold", color="#111827")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
-def chart_overpay_by_company(summary: pd.DataFrame, path) -> None:
+def chart_overpay_by_company(summary: pd.DataFrame, path, year: int) -> None:
     s = summary[summary["Company"] != "Total"].sort_values("Overpay USD", ascending=False)
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.bar(s["Company"], s["Overpay USD"], color="#e3b5b5")
+    ax.bar(s["Company"], s["Overpay USD"], color=RED, width=0.6, label="Overpay USD")
     ax.yaxis.set_major_formatter(usd)
-    ax.set_ylabel("Overpay USD")
     ax2 = ax.twinx()
-    ax2.plot(s["Company"], s["Overpay % of Quoted Spend"], color="#7a4a00", marker="o")
+    ax2.plot(s["Company"], s["Overpay % of Quoted Spend"], color=GREY, marker="o", lw=2,
+             label="Overpay % of quoted spend")
     ax2.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))
-    ax2.set_ylim(0, max(0.05, s["Overpay % of Quoted Spend"].max() * 1.3))
-    ax2.set_ylabel("Overpay % of quoted spend")
+    ax2.set_ylim(0, max(0.05, s["Overpay % of Quoted Spend"].max() * 1.4))
+    ax2.tick_params(colors=MUTED, labelsize=9)
+    for sp in ["top", "right", "left", "bottom"]:
+        ax2.spines[sp].set_visible(False)
     for x, v in zip(s["Company"], s["Overpay USD"]):
-        ax.text(x, v, f"${v:,.0f}", ha="center", va="bottom", fontsize=8)
-    ax.set_title("Overpayment by company", loc="left", fontsize=11)
-    ax.spines[["top"]].set_visible(False)
+        ax.text(x, v, f"${v/1000:,.0f}K", ha="center", va="bottom", fontsize=9, color=INK)
+    style(ax, f"Overpayment by company · {year}")
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2, frameon=False, fontsize=9, loc="upper right")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
 def chart_monthly(kpi: pd.DataFrame, path) -> None:
     fig, ax = plt.subplots(figsize=(10, 3.6))
-    ax.plot(kpi.index, kpi["Lines at offered price %"], marker="o", color="#2e7d32", label="Lines at offered price")
-    ax.plot(kpi.index, kpi["Lines above offered price %"], marker="o", color="#c62828", label="Lines above offered price")
+    ax.plot(kpi.index, kpi["Lines at offered price %"], marker="o", ms=4, lw=2, color=GREEN,
+            label="Lines at offered price")
+    ax.plot(kpi.index, kpi["Lines above offered price %"], marker="o", ms=4, lw=2, color=RED,
+            label="Lines above offered price")
     ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))
-    ax.set_ylim(0, 1)
-    ax.tick_params(axis="x", rotation=45, labelsize=8)
-    ax.legend(frameon=False)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.set_title("Monthly trend – share of offered PO lines", loc="left", fontsize=11)
+    ax.set_ylim(0, 0.8)
+    ax.tick_params(axis="x", rotation=45)
+    style(ax, f"Monthly trend – share of offered PO lines · {kpi.index[0]} – {kpi.index[-1]}")
+    ax.tick_params(axis="x", labelsize=8)
+    ax.legend(frameon=False, fontsize=9, loc="upper right", ncol=2)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
-def chart_overpay_by_vendor(df: pd.DataFrame, path) -> None:
+def chart_overpay_by_vendor(df: pd.DataFrame, path, year: int) -> None:
     v = df.groupby("Vendor")["Overpay USD"].sum().sort_values()
     fig, ax = plt.subplots(figsize=(8, 3.6))
-    ax.barh(v.index, v.values, color="#e08f95")
+    ax.barh(v.index, v.values, color=RED, height=0.6)
     ax.xaxis.set_major_formatter(usd)
     for y, val in enumerate(v.values):
-        ax.text(val, y, f" ${val:,.0f}", va="center", fontsize=8)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.set_title("Overpayment by vendor", loc="left", fontsize=11)
+        ax.text(val, y, f"  ${val/1000:,.0f}K", va="center", fontsize=9, color=INK)
+    style(ax, f"Overpayment by vendor · {year}")
+    ax.grid(axis="y", visible=False)
+    ax.grid(axis="x", color=GRID, lw=0.8)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -221,11 +243,16 @@ def main() -> None:
     monthly = monthly_kpis(df)
     vendors = summarise(df, ["Vendor"]).sort_values("Overpay USD", ascending=False)
 
+    # Charts: latest year (same period as the dashboards); trend covers all months
+    year = int(df["PO Date"].dt.year.max())
+    latest = df[df["PO Date"].dt.year == year]
+    latest_companies = company_summary(latest)
     config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
-    chart_categories(offered, config.CHARTS_DIR / "price_categories.png")
-    chart_overpay_by_company(companies[companies["Company Type"] != "All companies"], config.CHARTS_DIR / "overpay_by_company.png")
+    chart_categories(latest[latest["Has Offer"]], config.CHARTS_DIR / "price_categories.png", year)
+    chart_overpay_by_company(latest_companies[latest_companies["Company Type"] != "All companies"],
+                             config.CHARTS_DIR / "overpay_by_company.png", year)
     chart_monthly(monthly, config.CHARTS_DIR / "monthly_trend.png")
-    chart_overpay_by_vendor(df, config.CHARTS_DIR / "overpay_by_vendor.png")
+    chart_overpay_by_vendor(latest, config.CHARTS_DIR / "overpay_by_vendor.png", year)
     draw_dashboard(df, config.CHARTS_DIR / "dashboard.png")
     export_powerbi(df)
 
