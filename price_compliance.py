@@ -154,8 +154,10 @@ def chart_categories(df: pd.DataFrame, path, year: int) -> None:
     text_colours = ["white", INK, INK, INK, "white"]
     for cat, s, n, colour, tc in zip(CATEGORIES, share, counts, CATEGORY_COLORS, text_colours):
         ax.barh(0, s, left=left, color=colour)
-        if s > 0.04:
+        if s > 0.10:
             ax.text(left + s / 2, 0, f"{s:.0%}\n{n:,} lines", ha="center", va="center", fontsize=9, color=tc)
+        elif s > 0.03:                                   # narrow segment: percentage only
+            ax.text(left + s / 2, 0, f"{s:.0%}", ha="center", va="center", fontsize=9, color=tc)
         left += s
     ax.set_xlim(0, 1)
     ax.axis("off")
@@ -210,6 +212,7 @@ def chart_overpay_by_vendor(df: pd.DataFrame, path, year: int) -> None:
     v = df.groupby("Vendor")["Overpay USD"].sum().sort_values()
     fig, ax = plt.subplots(figsize=(8, 3.6))
     ax.barh(v.index, v.values, color=RED, height=0.6)
+    ax.set_xlim(0, v.max() * 1.15)                       # room for the value labels
     ax.xaxis.set_major_formatter(usd)
     for y, val in enumerate(v.values):
         ax.text(val, y, f"  ${val/1000:,.0f}K", va="center", fontsize=9, color=INK)
